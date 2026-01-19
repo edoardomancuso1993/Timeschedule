@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Mia Scaletta Temporale</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        :root {
+            --primary: #007bff;
+            --success: #28a745;
+            --past: #adb5bd;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f8f9fa; 
+            color: #333;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 20px; 
+            margin: 0;
+        }
+
+        /* Countdown Box */
+        #countdown-container { 
+            background: #212529; 
+            color: white; 
+            padding: 30px; 
+            border-radius: 15px; 
+            margin-bottom: 40px; 
+            text-align: center; 
+            width: 90%; 
+            max-width: 600px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        #timer { 
+            font-size: 2.5rem; 
+            font-weight: bold; 
+            font-family: monospace;
+            color: #ffc107;
+            margin-top: 10px;
+        }
+
+        /* Timeline Graphics */
+        .timeline { 
+            position: relative;
+            width: 90%; 
+            max-width: 600px; 
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--past);
+            border-radius: 2px;
+        }
+
+        .event { 
+            background: white; 
+            margin-bottom: 20px; 
+            padding: 20px; 
+            border-radius: 10px; 
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+
+        /* Punto sulla linea */
+        .event::before { 
+            content: ''; 
+            width: 16px; 
+            height: 16px; 
+            background: var(--past); 
+            position: absolute; 
+            left: -39px; 
+            top: 24px; 
+            border-radius: 50%; 
+            border: 3px solid #f8f9fa;
+        }
+
+        /* Stile Evento Prossimo */
+        .event.next { 
+            border: 2px solid var(--success);
+            transform: scale(1.02);
+        }
+        .event.next::before { background: var(--success); }
+
+        /* Stile Eventi Passati */
+        .event.past { opacity: 0.6; grayscale: 100%; }
+        .event.past h3 { text-decoration: line-through; }
+
+        /* Stile Eventi Futuri */
+        .event.future::before { background: var(--primary); }
+
+        h1, h2, h3 { margin: 0 0 10px 0; }
+        .date-label { font-size: 0.9rem; color: #666; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="countdown-container">
+        <h2>Prossimo Evento:</h2>
+        <h1 id="next-event-name">Ricerca in corso...</h1>
+        <div id="timer">00:00:00:00</div>
+    </div>
+
+    <div class="timeline" id="timeline">
+        </div>
+
+    <script>
+        const csvUrl = 'eventi.csv';
+
+        async function init() {
+            Papa.parse(csvUrl, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    const events = processData(results.data);
+                    render(events);
+                }
+            });
+        }
+
+        function processData(data) {
+            const now = new Date();
+            return data.map(e => ({
+                ...e,
+                timestamp: new Date(`${e.data}T${e.ora}`)
+            })).sort((a, b) => a.timestamp - b.timestamp);
+        }
+
+        function render(events) {
+            const container = document.getElementById('timeline');
+            const now = new Date();
+            
+            // Trova il primo evento futuro
+            const nextEvent = events.find(e => e.timestamp > now);
+            
+            container.innerHTML = '';
+
+            events.forEach(e => {
+                const isPast = e.timestamp < now;
+                const isNext = e === nextEvent;
+                
+                let statusClass = 'future';
+                if (isPast) statusClass = 'past';
+                if (isNext) statusClass = 'next';
+
+                const div = document.createElement('div');
+                div.className = `event ${statusClass}`;
+                div.innerHTML = `
+                    <div class="date-label">${e.data} alle ${e.ora}</div>
+                    <h3>${e.evento}</h3>
+                `;
+                container.appendChild(div);
+            });
+
+            if (nextEvent) {
+                document.getElementById('next-event-name').innerText = nextEvent.evento;
+                startCountdown(nextEvent.timestamp);
+            } else {
+                document.getElementById('next-event-name').innerText = "Nessun evento in programma";
+                document.getElementById('timer').innerText = "--:--:--";
+            }
+        }
+
+        function startCountdown(targetDate) {
+            const timerDisplay = document.getElementById('timer');
+            
+            function update() {
+                const now = new Date().getTime();
+                const dist = targetDate - now;
+
+                if (dist < 0) {
+                    location.reload(); // Ricarica per aggiornare la lista se l'evento è passato
+                    return;
+                }
+
+                const d = Math.floor(dist / (1000 * 60 * 60 * 24));
+                const h = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const m = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((dist % (1000 * 60)) / 1000);
+
+                timerDisplay.innerText = `${d}g ${h}h ${m}m ${s}s`;
+            }
+
+            setInterval(update, 1000);
+            update();
+        }
+
+        init();
+    </script>
+</body>
+</html>
