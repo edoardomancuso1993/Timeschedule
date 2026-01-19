@@ -3,177 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Area Riservata - Scaletta</title>
+    <title>Scaletta Eventi Responsive</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         :root {
             --primary: #007bff;
             --success: #28a745;
             --past: #adb5bd;
-            --bg: #f8f9fa;
+            --bg: #f0f2f5;
+            --dark: #212529;
         }
 
-        /* --- STILI LOGIN --- */
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            background: var(--bg); 
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* --- LOGIN SCREEN --- */
         #login-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #212529;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            color: white;
-            font-family: sans-serif;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--dark); display: flex; justify-content: center; align-items: center;
+            z-index: 9999; color: white;
         }
-
         .login-box {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            color: #333;
-            text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            background: white; padding: 40px; border-radius: 20px;
+            color: #333; text-align: center; width: 80%; max-width: 350px;
         }
-
         input[type="password"] {
-            padding: 10px;
-            width: 200px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            display: block;
+            padding: 12px; width: 100%; border: 1px solid #ddd;
+            border-radius: 8px; margin: 15px 0; box-sizing: border-box;
+        }
+        .btn-login {
+            padding: 12px 30px; background: var(--primary); color: white;
+            border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold;
         }
 
-        button.btn-login {
-            padding: 10px 25px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
+        /* --- LAYOUT GENERALE (MOBILE FIRST) --- */
+        #main-content {
+            display: none; width: 100%; max-width: 1200px; padding: 20px;
+            box-sizing: border-box;
         }
 
-        /* --- STILI CONTENT (Nascosti all'inizio) --- */
-        #main-content { display: none; }
+        .container {
+            display: flex;
+            flex-direction: column; /* Colonna singola su mobile */
+            gap: 20px;
+        }
 
-        /* ... (Inserisci qui tutto il resto dei CSS che avevamo prima) ... */
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        #countdown-container { background: #212529; color: white; padding: 30px; border-radius: 20px; margin-bottom: 40px; text-align: center; width: 90%; max-width: 600px; }
-        #timer { font-size: 2.8rem; font-weight: 800; color: #ffc107; }
-        .timeline { position: relative; width: 90%; max-width: 600px; padding-left: 40px; }
-        .event { background: white; margin-bottom: 25px; padding: 20px; border-radius: 12px; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .event.next { border-left: 6px solid var(--success); }
-        .event.past { opacity: 0.5; filter: grayscale(1); }
+        /* --- COUNTDOWN BOX --- */
+        #countdown-container { 
+            background: var(--dark); color: white; padding: 30px; 
+            border-radius: 20px; text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        #timer { 
+            font-size: 2.2rem; font-weight: 800; color: #ffc107; 
+            font-family: monospace; margin-top: 10px;
+        }
+
+        /* --- TIMELINE --- */
+        .timeline { 
+            position: relative; padding-left: 40px; margin-top: 20px;
+        }
+        .timeline::before {
+            content: ''; position: absolute; left: 15px; top: 0; bottom: 0;
+            width: 4px; background: #dee2e6; border-radius: 2px;
+        }
+        .event { 
+            background: white; margin-bottom: 20px; padding: 20px; 
+            border-radius: 15px; position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .event::after { 
+            content: ''; width: 16px; height: 16px; background: var(--past); 
+            position: absolute; left: -33px; top: 24px; 
+            border-radius: 50%; border: 4px solid var(--bg); z-index: 1;
+        }
+        .event.next { border-left: 6px solid var(--success); transform: scale(1.02); }
+        .event.next::after { background: var(--success); }
+        .event.past { opacity: 0.6; filter: grayscale(0.8); }
+
+        /* --- DESKTOP ADAPTATION (Schermi > 768px) --- */
+        @media (min-width: 768px) {
+            .container {
+                flex-direction: row; /* Due colonne su desktop */
+                align-items: flex-start;
+            }
+            #countdown-container {
+                flex: 1; /* Prende meno spazio */
+                position: sticky;
+                top: 20px; /* Rimane fisso mentre scorri la timeline */
+            }
+            .timeline {
+                flex: 2; /* La timeline ha più spazio */
+                margin-top: 0;
+            }
+            #timer { font-size: 3rem; }
+        }
+
+        h1, h2, h3 { margin: 0; }
+        .date-label { font-size: 0.85rem; color: #6c757d; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
         <div class="login-box">
-            <h2>Accesso Riservato</h2>
-            <p>Inserisci la password per vedere la scaletta</p>
-            <input type="password" id="password-input" placeholder="Password">
-            <button class="btn-login" onclick="checkLogin()">Accedi</button>
-            <p id="login-error" style="color: red; display: none; font-size: 0.8rem; margin-top: 10px;">Password errata!</p>
+            <h2>Accesso</h2>
+            <input type="password" id="pw" placeholder="Inserisci Password">
+            <button class="btn-login" onclick="checkLogin()">Entra</button>
+            <p id="err" style="color:red; display:none; font-size:12px;">Riprova!</p>
         </div>
     </div>
 
     <div id="main-content">
-        <div id="countdown-container">
-            <h2 style="font-weight: 400; opacity: 0.9;">Prossimo Evento</h2>
-            <h1 id="next-event-name">Caricamento...</h1>
-            <div id="timer">00:00:00:00</div>
-        </div>
+        <div class="container">
+            <div id="countdown-container">
+                <h2 style="font-weight:300;">Prossimo Evento</h2>
+                <h1 id="next-event-name" style="margin:10px 0;">...</h1>
+                <div id="timer">00g 00h 00m 00s</div>
+            </div>
 
-        <div class="timeline" id="timeline"></div>
+            <div class="timeline" id="timeline"></div>
+        </div>
     </div>
 
     <script>
-        // --- CONFIGURAZIONE LOGIN ---
-        const SECRET_PASSWORD = "499P2026"; // Cambia questa password!
+        const PWD = "MiaPassword2026";
+        const CSV = 'eventi.csv';
 
         function checkLogin() {
-            const input = document.getElementById('password-input').value;
-            if (input === SECRET_PASSWORD) {
-                // Password corretta
+            if(document.getElementById('pw').value === PWD) {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
-                // Salviamo la sessione così se ricarica non deve ri-loggare subito
-                sessionStorage.setItem('isLoggedIn', 'true');
-                init(); // Avvia il caricamento dei dati
-            } else {
-                document.getElementById('login-error').style.display = 'block';
-            }
+                sessionStorage.setItem('logged', 'true');
+                init();
+            } else { document.getElementById('err').style.display = 'block'; }
         }
 
-        // Controllo se l'utente era già loggato in questa sessione
-        window.onload = () => {
-            if (sessionStorage.getItem('isLoggedIn') === 'true') {
+        window.onload = () => { 
+            if(sessionStorage.getItem('logged') === 'true') {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
                 init();
             }
         };
 
-        // --- IL RESTO DEL TUO CODICE JAVASCRIPT ---
-        const csvUrl = 'eventi.csv';
-
         async function init() {
-            Papa.parse(csvUrl, {
-                download: true,
-                header: true,
-                skipEmptyLines: true,
-                complete: function(results) {
-                    const cleanData = results.data.map(row => {
-                        const normalizedRow = {};
-                        for (let key in row) normalizedRow[key.toLowerCase().trim()] = row[key];
-                        return normalizedRow;
+            Papa.parse(CSV, {
+                download: true, header: true, skipEmptyLines: true,
+                complete: function(res) {
+                    const cleanData = res.data.map(r => {
+                        const n = {};
+                        for(let k in r) n[k.toLowerCase().trim()] = r[k];
+                        return n;
                     });
-                    render(processData(cleanData));
+                    render(process(cleanData));
                 }
             });
         }
 
-        // ... (Qui incolla le funzioni processData, render e startCountdown che abbiamo scritto prima) ...
-        function processData(data) {
+        function process(data) {
             const now = new Date();
             return data.filter(e => e.data && e.ora).map(e => ({
                 ...e,
-                timestamp: new Date(`${e.data.replace(/\//g, '-')}T${e.ora}`)
-            })).sort((a, b) => a.timestamp - b.timestamp);
+                ts: new Date(`${e.data.replace(/\//g, '-')}T${e.ora}`)
+            })).sort((a,b) => a.ts - b.ts);
         }
 
         function render(events) {
             const container = document.getElementById('timeline');
             const now = new Date();
-            const nextEvent = events.find(e => e.timestamp > now);
+            const next = events.find(e => e.ts > now);
             container.innerHTML = '';
+
             events.forEach(e => {
-                if (isNaN(e.timestamp)) return;
-                const statusClass = e.timestamp < now ? 'past' : (e === nextEvent ? 'next' : 'future');
+                const status = e.ts < now ? 'past' : (e === next ? 'next' : 'future');
                 const div = document.createElement('div');
-                div.className = `event ${statusClass}`;
-                div.innerHTML = `<span class="date-label">${e.data} • ${e.ora}</span><h3>${e.evento || 'Senza Titolo'}</h3>`;
+                div.className = `event ${status}`;
+                div.innerHTML = `<span class="date-label">${e.data} • ${e.ora}</span><h3>${e.evento}</h3>`;
                 container.appendChild(div);
             });
-            if (nextEvent) {
-                document.getElementById('next-event-name').innerText = nextEvent.evento;
-                startCountdown(nextEvent.timestamp);
+
+            if(next) {
+                document.getElementById('next-event-name').innerText = next.evento;
+                startTimer(next.ts);
             }
         }
 
-        function startCountdown(targetDate) {
-            const timerDisplay = document.getElementById('timer');
+        function startTimer(target) {
+            const display = document.getElementById('timer');
             setInterval(() => {
-                const dist = targetDate - new Date().getTime();
-                if (dist < 0) { location.reload(); return; }
-                const d = Math.floor(dist / (1000 * 60 * 60 * 24));
-                const h = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const m = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
-                const s = Math.floor((dist % (1000 * 60)) / 1000);
-                timerDisplay.innerText = `${d}g ${h}h ${m}m ${s}s`;
+                const dist = target - new Date().getTime();
+                if(dist < 0) { location.reload(); return; }
+                const d = Math.floor(dist / 86400000);
+                const h = Math.floor((dist % 86400000) / 3600000);
+                const m = Math.floor((dist % 3600000) / 60000);
+                const s = Math.floor((dist % 60000) / 1000);
+                display.innerText = `${d}g ${h}h ${m}m ${s}s`;
             }, 1000);
         }
     </script>
