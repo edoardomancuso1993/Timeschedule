@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>La Mia Scaletta Temporale</title>
+    <title>Timeline Eventi Dinamica</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         :root {
             --primary: #007bff;
             --success: #28a745;
             --past: #adb5bd;
+            --bg: #f8f9fa;
         }
 
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: #f8f9fa; 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            background: var(--bg); 
             color: #333;
             display: flex; 
             flex-direction: column; 
@@ -23,92 +24,97 @@
             margin: 0;
         }
 
-        /* Countdown Box */
+        /* Box Countdown */
         #countdown-container { 
             background: #212529; 
             color: white; 
             padding: 30px; 
-            border-radius: 15px; 
+            border-radius: 20px; 
             margin-bottom: 40px; 
             text-align: center; 
             width: 90%; 
             max-width: 600px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
         }
 
         #timer { 
-            font-size: 2.5rem; 
-            font-weight: bold; 
-            font-family: monospace;
+            font-size: 2.8rem; 
+            font-weight: 800; 
+            font-family: 'Courier New', monospace;
             color: #ffc107;
             margin-top: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
-        /* Timeline Graphics */
+        /* Timeline */
         .timeline { 
             position: relative;
             width: 90%; 
             max-width: 600px; 
-            padding-left: 30px;
+            padding-left: 40px;
+            box-sizing: border-box;
         }
 
         .timeline::before {
             content: '';
             position: absolute;
-            left: 0;
+            left: 15px;
             top: 0;
             bottom: 0;
             width: 4px;
-            background: var(--past);
+            background: #dee2e6;
             border-radius: 2px;
         }
 
         .event { 
             background: white; 
-            margin-bottom: 20px; 
+            margin-bottom: 25px; 
             padding: 20px; 
-            border-radius: 10px; 
+            border-radius: 12px; 
             position: relative;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
         }
 
-        /* Punto sulla linea */
-        .event::before { 
+        /* Pallino sulla linea */
+        .event::after { 
             content: ''; 
-            width: 16px; 
-            height: 16px; 
+            width: 18px; 
+            height: 18px; 
             background: var(--past); 
             position: absolute; 
-            left: -39px; 
+            left: -32px; 
             top: 24px; 
             border-radius: 50%; 
-            border: 3px solid #f8f9fa;
+            border: 4px solid var(--bg);
+            z-index: 1;
         }
 
-        /* Stile Evento Prossimo */
+        /* STATI EVENTO */
         .event.next { 
-            border: 2px solid var(--success);
-            transform: scale(1.02);
+            border-left: 6px solid var(--success);
+            transform: scale(1.03);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.12);
         }
-        .event.next::before { background: var(--success); }
+        .event.next::after { background: var(--success); }
 
-        /* Stile Eventi Passati */
-        .event.past { opacity: 0.6; grayscale: 100%; }
+        .event.past { 
+            opacity: 0.5; 
+            filter: grayscale(1);
+        }
         .event.past h3 { text-decoration: line-through; }
 
-        /* Stile Eventi Futuri */
-        .event.future::before { background: var(--primary); }
+        .event.future::after { background: var(--primary); }
 
-        h1, h2, h3 { margin: 0 0 10px 0; }
-        .date-label { font-size: 0.9rem; color: #666; font-weight: bold; }
+        h1, h2, h3 { margin: 0; }
+        .date-label { font-size: 0.85rem; color: #6c757d; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; display: block; }
     </style>
 </head>
 <body>
 
     <div id="countdown-container">
-        <h2>Prossimo Evento:</h2>
-        <h1 id="next-event-name">Ricerca in corso...</h1>
+        <h2 style="font-weight: 400; opacity: 0.9;">Prossimo Evento</h2>
+        <h1 id="next-event-name">Caricamento...</h1>
         <div id="timer">00:00:00:00</div>
     </div>
 
@@ -124,42 +130,56 @@
                 header: true,
                 skipEmptyLines: true,
                 complete: function(results) {
-                    const events = processData(results.data);
+                    // NORMALIZZAZIONE: Trasforma tutte le chiavi in minuscolo
+                    const cleanData = results.data.map(row => {
+                        const normalizedRow = {};
+                        for (let key in row) {
+                            normalizedRow[key.toLowerCase().trim()] = row[key];
+                        }
+                        return normalizedRow;
+                    });
+                    
+                    const events = processData(cleanData);
                     render(events);
+                },
+                error: function(err) {
+                    console.error("Errore nel caricamento CSV:", err);
+                    document.getElementById('next-event-name').innerText = "Errore file .csv";
                 }
             });
         }
 
         function processData(data) {
             const now = new Date();
-            return data.map(e => ({
-                ...e,
-                timestamp: new Date(`${e.data}T${e.ora}`)
-            })).sort((a, b) => a.timestamp - b.timestamp);
+            return data
+                .filter(e => e.data && e.ora) // Salta righe vuote o malformate
+                .map(e => ({
+                    ...e,
+                    timestamp: new Date(`${e.data.replace(/\//g, '-')}T${e.ora}`)
+                }))
+                .sort((a, b) => a.timestamp - b.timestamp);
         }
 
         function render(events) {
             const container = document.getElementById('timeline');
             const now = new Date();
-            
-            // Trova il primo evento futuro
             const nextEvent = events.find(e => e.timestamp > now);
             
             container.innerHTML = '';
 
             events.forEach(e => {
+                if (isNaN(e.timestamp)) return; // Salta se la data non è valida
+
                 const isPast = e.timestamp < now;
                 const isNext = e === nextEvent;
                 
-                let statusClass = 'future';
-                if (isPast) statusClass = 'past';
-                if (isNext) statusClass = 'next';
+                const statusClass = isPast ? 'past' : (isNext ? 'next' : 'future');
 
                 const div = document.createElement('div');
                 div.className = `event ${statusClass}`;
                 div.innerHTML = `
-                    <div class="date-label">${e.data} alle ${e.ora}</div>
-                    <h3>${e.evento}</h3>
+                    <span class="date-label">${e.data} • ${e.ora}</span>
+                    <h3>${e.evento || 'Senza Titolo'}</h3>
                 `;
                 container.appendChild(div);
             });
@@ -168,8 +188,8 @@
                 document.getElementById('next-event-name').innerText = nextEvent.evento;
                 startCountdown(nextEvent.timestamp);
             } else {
-                document.getElementById('next-event-name').innerText = "Nessun evento in programma";
-                document.getElementById('timer').innerText = "--:--:--";
+                document.getElementById('next-event-name').innerText = "Fine eventi";
+                document.getElementById('timer').innerText = "-- : -- : --";
             }
         }
 
@@ -181,7 +201,7 @@
                 const dist = targetDate - now;
 
                 if (dist < 0) {
-                    location.reload(); // Ricarica per aggiornare la lista se l'evento è passato
+                    location.reload();
                     return;
                 }
 
@@ -190,7 +210,8 @@
                 const m = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
                 const s = Math.floor((dist % (1000 * 60)) / 1000);
 
-                timerDisplay.innerText = `${d}g ${h}h ${m}m ${s}s`;
+                timerDisplay.innerText = 
+                    `${d.toString().padStart(2, '0')}g ${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
             }
 
             setInterval(update, 1000);
