@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Timeline Eventi Dinamica</title>
+    <title>Area Riservata - Scaletta</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         :root {
@@ -13,115 +13,111 @@
             --bg: #f8f9fa;
         }
 
-        body { 
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
-            background: var(--bg); 
+        /* --- STILI LOGIN --- */
+        #login-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #212529;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+            font-family: sans-serif;
+        }
+
+        .login-box {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
             color: #333;
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            padding: 20px; 
-            margin: 0;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
 
-        /* Box Countdown */
-        #countdown-container { 
-            background: #212529; 
-            color: white; 
-            padding: 30px; 
-            border-radius: 20px; 
-            margin-bottom: 40px; 
-            text-align: center; 
-            width: 90%; 
-            max-width: 600px;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        input[type="password"] {
+            padding: 10px;
+            width: 200px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: block;
         }
 
-        #timer { 
-            font-size: 2.8rem; 
-            font-weight: 800; 
-            font-family: 'Courier New', monospace;
-            color: #ffc107;
-            margin-top: 10px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        button.btn-login {
+            padding: 10px 25px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
         }
 
-        /* Timeline */
-        .timeline { 
-            position: relative;
-            width: 90%; 
-            max-width: 600px; 
-            padding-left: 40px;
-            box-sizing: border-box;
-        }
+        /* --- STILI CONTENT (Nascosti all'inizio) --- */
+        #main-content { display: none; }
 
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 15px;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background: #dee2e6;
-            border-radius: 2px;
-        }
-
-        .event { 
-            background: white; 
-            margin-bottom: 25px; 
-            padding: 20px; 
-            border-radius: 12px; 
-            position: relative;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: all 0.3s ease;
-        }
-
-        /* Pallino sulla linea */
-        .event::after { 
-            content: ''; 
-            width: 18px; 
-            height: 18px; 
-            background: var(--past); 
-            position: absolute; 
-            left: -32px; 
-            top: 24px; 
-            border-radius: 50%; 
-            border: 4px solid var(--bg);
-            z-index: 1;
-        }
-
-        /* STATI EVENTO */
-        .event.next { 
-            border-left: 6px solid var(--success);
-            transform: scale(1.03);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.12);
-        }
-        .event.next::after { background: var(--success); }
-
-        .event.past { 
-            opacity: 0.5; 
-            filter: grayscale(1);
-        }
-        .event.past h3 { text-decoration: line-through; }
-
-        .event.future::after { background: var(--primary); }
-
-        h1, h2, h3 { margin: 0; }
-        .date-label { font-size: 0.85rem; color: #6c757d; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        /* ... (Inserisci qui tutto il resto dei CSS che avevamo prima) ... */
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        #countdown-container { background: #212529; color: white; padding: 30px; border-radius: 20px; margin-bottom: 40px; text-align: center; width: 90%; max-width: 600px; }
+        #timer { font-size: 2.8rem; font-weight: 800; color: #ffc107; }
+        .timeline { position: relative; width: 90%; max-width: 600px; padding-left: 40px; }
+        .event { background: white; margin-bottom: 25px; padding: 20px; border-radius: 12px; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .event.next { border-left: 6px solid var(--success); }
+        .event.past { opacity: 0.5; filter: grayscale(1); }
     </style>
 </head>
 <body>
 
-    <div id="countdown-container">
-        <h2 style="font-weight: 400; opacity: 0.9;">Prossimo Evento</h2>
-        <h1 id="next-event-name">Caricamento...</h1>
-        <div id="timer">00:00:00:00</div>
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>Accesso Riservato</h2>
+            <p>Inserisci la password per vedere la scaletta</p>
+            <input type="password" id="password-input" placeholder="Password">
+            <button class="btn-login" onclick="checkLogin()">Accedi</button>
+            <p id="login-error" style="color: red; display: none; font-size: 0.8rem; margin-top: 10px;">Password errata!</p>
+        </div>
     </div>
 
-    <div class="timeline" id="timeline">
+    <div id="main-content">
+        <div id="countdown-container">
+            <h2 style="font-weight: 400; opacity: 0.9;">Prossimo Evento</h2>
+            <h1 id="next-event-name">Caricamento...</h1>
+            <div id="timer">00:00:00:00</div>
         </div>
 
+        <div class="timeline" id="timeline"></div>
+    </div>
+
     <script>
+        // --- CONFIGURAZIONE LOGIN ---
+        const SECRET_PASSWORD = "499P2026"; // Cambia questa password!
+
+        function checkLogin() {
+            const input = document.getElementById('password-input').value;
+            if (input === SECRET_PASSWORD) {
+                // Password corretta
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                // Salviamo la sessione così se ricarica non deve ri-loggare subito
+                sessionStorage.setItem('isLoggedIn', 'true');
+                init(); // Avvia il caricamento dei dati
+            } else {
+                document.getElementById('login-error').style.display = 'block';
+            }
+        }
+
+        // Controllo se l'utente era già loggato in questa sessione
+        window.onload = () => {
+            if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                init();
+            }
+        };
+
+        // --- IL RESTO DEL TUO CODICE JAVASCRIPT ---
         const csvUrl = 'eventi.csv';
 
         async function init() {
@@ -130,95 +126,56 @@
                 header: true,
                 skipEmptyLines: true,
                 complete: function(results) {
-                    // NORMALIZZAZIONE: Trasforma tutte le chiavi in minuscolo
                     const cleanData = results.data.map(row => {
                         const normalizedRow = {};
-                        for (let key in row) {
-                            normalizedRow[key.toLowerCase().trim()] = row[key];
-                        }
+                        for (let key in row) normalizedRow[key.toLowerCase().trim()] = row[key];
                         return normalizedRow;
                     });
-                    
-                    const events = processData(cleanData);
-                    render(events);
-                },
-                error: function(err) {
-                    console.error("Errore nel caricamento CSV:", err);
-                    document.getElementById('next-event-name').innerText = "Errore file .csv";
+                    render(processData(cleanData));
                 }
             });
         }
 
+        // ... (Qui incolla le funzioni processData, render e startCountdown che abbiamo scritto prima) ...
         function processData(data) {
             const now = new Date();
-            return data
-                .filter(e => e.data && e.ora) // Salta righe vuote o malformate
-                .map(e => ({
-                    ...e,
-                    timestamp: new Date(`${e.data.replace(/\//g, '-')}T${e.ora}`)
-                }))
-                .sort((a, b) => a.timestamp - b.timestamp);
+            return data.filter(e => e.data && e.ora).map(e => ({
+                ...e,
+                timestamp: new Date(`${e.data.replace(/\//g, '-')}T${e.ora}`)
+            })).sort((a, b) => a.timestamp - b.timestamp);
         }
 
         function render(events) {
             const container = document.getElementById('timeline');
             const now = new Date();
             const nextEvent = events.find(e => e.timestamp > now);
-            
             container.innerHTML = '';
-
             events.forEach(e => {
-                if (isNaN(e.timestamp)) return; // Salta se la data non è valida
-
-                const isPast = e.timestamp < now;
-                const isNext = e === nextEvent;
-                
-                const statusClass = isPast ? 'past' : (isNext ? 'next' : 'future');
-
+                if (isNaN(e.timestamp)) return;
+                const statusClass = e.timestamp < now ? 'past' : (e === nextEvent ? 'next' : 'future');
                 const div = document.createElement('div');
                 div.className = `event ${statusClass}`;
-                div.innerHTML = `
-                    <span class="date-label">${e.data} • ${e.ora}</span>
-                    <h3>${e.evento || 'Senza Titolo'}</h3>
-                `;
+                div.innerHTML = `<span class="date-label">${e.data} • ${e.ora}</span><h3>${e.evento || 'Senza Titolo'}</h3>`;
                 container.appendChild(div);
             });
-
             if (nextEvent) {
                 document.getElementById('next-event-name').innerText = nextEvent.evento;
                 startCountdown(nextEvent.timestamp);
-            } else {
-                document.getElementById('next-event-name').innerText = "Fine eventi";
-                document.getElementById('timer').innerText = "-- : -- : --";
             }
         }
 
         function startCountdown(targetDate) {
             const timerDisplay = document.getElementById('timer');
-            
-            function update() {
-                const now = new Date().getTime();
-                const dist = targetDate - now;
-
-                if (dist < 0) {
-                    location.reload();
-                    return;
-                }
-
+            setInterval(() => {
+                const dist = targetDate - new Date().getTime();
+                if (dist < 0) { location.reload(); return; }
                 const d = Math.floor(dist / (1000 * 60 * 60 * 24));
                 const h = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 const m = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
                 const s = Math.floor((dist % (1000 * 60)) / 1000);
-
-                timerDisplay.innerText = 
-                    `${d.toString().padStart(2, '0')}g ${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
-            }
-
-            setInterval(update, 1000);
-            update();
+                timerDisplay.innerText = `${d}g ${h}h ${m}m ${s}s`;
+            }, 1000);
         }
-
-        init();
     </script>
 </body>
 </html>
