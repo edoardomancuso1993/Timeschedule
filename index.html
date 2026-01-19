@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scaletta Eventi Responsive</title>
+    <title>Scaletta Ferrari 499P</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         :root {
-            --primary: #007bff;
+            --primary: #ff0000; /* Rosso Ferrari */
             --success: #28a745;
             --past: #adb5bd;
             --bg: #f0f2f5;
-            --dark: #212529;
+            --dark: #1a1a1a;
         }
 
         body { 
@@ -19,6 +19,23 @@
             background: var(--bg); 
             margin: 0; padding: 0;
             display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* --- HEADER LOGHI --- */
+        .top-bar {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            box-sizing: border-box;
+        }
+
+        .top-bar img {
+            height: 40px; /* Regola l'altezza dei loghi qui */
+            width: auto;
+            object-fit: contain;
         }
 
         /* --- LOGIN SCREEN --- */
@@ -40,23 +57,23 @@
             border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold;
         }
 
-        /* --- LAYOUT GENERALE (MOBILE FIRST) --- */
+        /* --- LAYOUT CONTENUTO --- */
         #main-content {
-            display: none; width: 100%; max-width: 1200px; padding: 20px;
+            display: none; width: 100%; max-width: 1200px; padding: 0 20px 20px 20px;
             box-sizing: border-box;
         }
 
         .container {
             display: flex;
-            flex-direction: column; /* Colonna singola su mobile */
+            flex-direction: column;
             gap: 20px;
         }
 
-        /* --- COUNTDOWN BOX --- */
+        /* --- COUNTDOWN --- */
         #countdown-container { 
             background: var(--dark); color: white; padding: 30px; 
             border-radius: 20px; text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
         #timer { 
             font-size: 2.2rem; font-weight: 800; color: #ffc107; 
@@ -64,9 +81,7 @@
         }
 
         /* --- TIMELINE --- */
-        .timeline { 
-            position: relative; padding-left: 40px; margin-top: 20px;
-        }
+        .timeline { position: relative; padding-left: 40px; margin-top: 20px; }
         .timeline::before {
             content: ''; position: absolute; left: 15px; top: 0; bottom: 0;
             width: 4px; background: #dee2e6; border-radius: 2px;
@@ -81,40 +96,34 @@
             position: absolute; left: -33px; top: 24px; 
             border-radius: 50%; border: 4px solid var(--bg); z-index: 1;
         }
-        .event.next { border-left: 6px solid var(--success); transform: scale(1.02); }
-        .event.next::after { background: var(--success); }
+        .event.next { border-left: 6px solid var(--primary); transform: scale(1.02); }
+        .event.next::after { background: var(--primary); }
         .event.past { opacity: 0.6; filter: grayscale(0.8); }
 
-        /* --- DESKTOP ADAPTATION (Schermi > 768px) --- */
+        /* --- DESKTOP --- */
         @media (min-width: 768px) {
-            .container {
-                flex-direction: row; /* Due colonne su desktop */
-                align-items: flex-start;
-            }
-            #countdown-container {
-                flex: 1; /* Prende meno spazio */
-                position: sticky;
-                top: 20px; /* Rimane fisso mentre scorri la timeline */
-            }
-            .timeline {
-                flex: 2; /* La timeline ha più spazio */
-                margin-top: 0;
-            }
+            .container { flex-direction: row; align-items: flex-start; }
+            #countdown-container { flex: 1; position: sticky; top: 20px; }
+            .timeline { flex: 2; margin-top: 0; }
             #timer { font-size: 3rem; }
+            .top-bar img { height: 60px; } /* Loghi più grandi su desktop */
         }
-
-        h1, h2, h3 { margin: 0; }
-        .date-label { font-size: 0.85rem; color: #6c757d; font-weight: bold; }
     </style>
 </head>
 <body>
 
+    <div class="top-bar">
+        <img src="logo-499p.JPG" alt="Ferrari 499P Logo">
+        <img src="logo-ferrari.png" alt="Ferrari Logo">
+    </div>
+
     <div id="login-screen">
         <div class="login-box">
-            <h2>Accesso</h2>
-            <input type="password" id="pw" placeholder="Inserisci Password">
-            <button class="btn-login" onclick="checkLogin()">Entra</button>
-            <p id="err" style="color:red; display:none; font-size:12px;">Riprova!</p>
+            <img src="logo-ferrari.png" style="height: 60px; margin-bottom: 20px;" alt="Ferrari">
+            <h2>Area Riservata</h2>
+            <input type="password" id="pw" placeholder="Password Accesso">
+            <button class="btn-login" onclick="checkLogin()">Accedi</button>
+            <p id="err" style="color:red; display:none; font-size:12px; margin-top:10px;">Password errata</p>
         </div>
     </div>
 
@@ -122,8 +131,8 @@
         <div class="container">
             <div id="countdown-container">
                 <h2 style="font-weight:300;">Prossimo Evento</h2>
-                <h1 id="next-event-name" style="margin:10px 0;">...</h1>
-                <div id="timer">00g 00h 00m 00s</div>
+                <h1 id="next-event-name" style="margin:10px 0;">Ricerca...</h1>
+                <div id="timer">--g --h --m --s</div>
             </div>
 
             <div class="timeline" id="timeline"></div>
@@ -131,7 +140,7 @@
     </div>
 
     <script>
-        const PWD = "MiaPassword2026";
+        const PWD = "MiaPassword2026"; // Cambia qui la password
         const CSV = 'eventi.csv';
 
         function checkLogin() {
@@ -179,25 +188,32 @@
             const next = events.find(e => e.ts > now);
             container.innerHTML = '';
 
+            if (events.length === 0) {
+                container.innerHTML = "<p style='text-align:center'>Nessun dato trovato nel file CSV.</p>";
+                return;
+            }
+
             events.forEach(e => {
                 const status = e.ts < now ? 'past' : (e === next ? 'next' : 'future');
                 const div = document.createElement('div');
                 div.className = `event ${status}`;
-                div.innerHTML = `<span class="date-label">${e.data} • ${e.ora}</span><h3>${e.evento}</h3>`;
+                div.innerHTML = `<span class="date-label">${e.data} • ${e.ora}</span><h3>${e.evento || 'Senza nome'}</h3>`;
                 container.appendChild(div);
             });
 
             if(next) {
                 document.getElementById('next-event-name').innerText = next.evento;
                 startTimer(next.ts);
+            } else {
+                document.getElementById('next-event-name').innerText = "Fine Programma";
             }
         }
 
         function startTimer(target) {
             const display = document.getElementById('timer');
-            setInterval(() => {
+            const timerId = setInterval(() => {
                 const dist = target - new Date().getTime();
-                if(dist < 0) { location.reload(); return; }
+                if(dist < 0) { clearInterval(timerId); location.reload(); return; }
                 const d = Math.floor(dist / 86400000);
                 const h = Math.floor((dist % 86400000) / 3600000);
                 const m = Math.floor((dist % 3600000) / 60000);
